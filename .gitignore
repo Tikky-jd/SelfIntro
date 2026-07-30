@@ -1,0 +1,15 @@
+# ---- Backend ----
+backend/target/
+backend/uploads/
+backend/.mvn/
+*.iml
+backend/HELP.md
+
+# ---- OS / Editor ----
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ---- Logs ----
+*.log
