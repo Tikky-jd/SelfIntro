@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getProfile } from '../api/profile'
+import { getProfileContent } from '../api/content'
 
 const profile = ref(null)
 const loading = ref(true)
@@ -9,7 +9,7 @@ const order = ['EDUCATION', 'EXPERIENCE', 'PROJECT', 'SKILL', 'CERT']
 
 onMounted(async () => {
   try {
-    profile.value = await getProfile()
+    profile.value = await getProfileContent()
   } catch (e) {
     profile.value = null
   } finally {

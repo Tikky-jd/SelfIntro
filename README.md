@@ -1,14 +1,31 @@
-# SelfIntro · 个人网站
+# SelfIntro · 个人网站（纯静态）
 
-一个使用 **Vue 3 + Spring Boot** 构建的个人网站，支持：
+一个 **纯静态** 的个人网站，使用 **Vue 3 + Vite** 构建。
 
 - 🏠 **首页**：个人介绍 / Hero、最新动态、精选作品预览
-- 📄 **简历页**：关于我 + 结构化简历（教育 / 工作 / 项目 / 技能 / 证书）
+- 📄 **简历页**：关于我 + 结构化简历（教育 / 工作 / 项目 / 技能）
 - 📝 **个人动态页**：图文笔记（Markdown + 多图），列表 + 详情
 - 🎨 **作品页**：图片 / 视频作品展示，支持分类筛选与详情
-- 🔐 **后台管理**：管理员登录（JWT），可视化编辑资料、笔记、作品，媒体上传
 
-前端部署到 **GitHub Pages**（免费公开访问），后端（Spring Boot）部署到 **Render / Railway** 等云平台，媒体文件存到 **Cloudinary** 对象存储。
+**没有后端、没有数据库、没有服务器**：所有内容就是仓库里的几个 JSON 文件 + 媒体文件，由 GitHub Pages 直接托管。改内容 = 改文件 + 重新构建部署。
+
+---
+
+## 它是怎么"没有后端"的
+
+```
+访客浏览器
+   │  ① 加载静态页面（HTML/JS/CSS）
+   ▼
+GitHub Pages（纯文件托管）
+   ├── index.html / 打包后的 JS
+   ├── data/profile.json  ← 个人资料 + 简历
+   ├── data/posts.json    ← 动态（笔记）列表
+   ├── data/works.json    ← 作品列表
+   └── uploads/*          ← 图片 / 视频等媒体
+```
+
+前端在运行时直接 `fetch` 这些 JSON 文件来渲染页面，**完全不需要任何服务器程序或数据库**。
 
 ---
 
@@ -16,10 +33,11 @@
 
 | 层 | 技术 |
 | --- | --- |
-| 前端 | Vue 3 (Composition API) · Vite · Vue Router (hash) · Pinia · Axios · marked |
-| 后端 | Spring Boot 3.2 · Spring Security 6 (JWT) · Spring Data JPA · Java 17 |
-| 数据库 | MySQL（生产）/ H2（本地开发） |
-| 存储 | Cloudinary（生产）/ 本地磁盘（开发） |
+| 前端 | Vue 3 (Composition API) · Vite · Vue Router (hash) · marked |
+| 内容 | 普通 JSON 文件（`frontend/public/data/*.json`）+ 媒体文件（`frontend/public/uploads/`） |
+| 托管 | GitHub Pages（CI 自动构建部署） |
+
+> 没有任何后端依赖。旧的 Spring Boot 后端已被移除。
 
 ---
 
@@ -27,119 +45,104 @@
 
 ```
 SELFIntro/
-├── frontend/                # Vue3 前端
+├── frontend/                # Vue3 前端（唯一的"应用"）
 │   ├── src/
-│   │   ├── api/             # 后端接口封装
-│   │   ├── components/      # 公共组件
-│   │   ├── views/           # 页面（含 admin/ 后台）
-│   │   ├── stores/          # Pinia 状态（鉴权）
-│   │   ├── router/          # 路由 + 守卫
+│   │   ├── api/content.js   # 读取 public/data 下的静态 JSON
+│   │   ├── components/      # 公共组件（含 WorkCard / PostCard / MarkdownView）
+│   │   ├── views/           # 页面（首页/简历/动态/作品 + 详情）
+│   │   ├── router/display.js# 展示站路由（仅公开页）
 │   │   └── assets/style.css # 设计系统
-│   ├── .env                 # 本地 API 地址
-│   ├── .env.production      # 生产 API 地址（部署前改）
-│   └── vite.config.js       # 含 GitHub Pages base 路径
-├── backend/                 # Spring Boot 后端
-│   ├── src/main/java/...    # 实体 / 仓库 / 服务 / 控制器 / 安全
-│   ├── src/main/resources/  # application.yml (dev/prod)
-│   ├── Dockerfile
-│   └── pom.xml
-├── render.yaml              # 后端 Render 部署配置
-└── .github/workflows/       # 前端自动部署到 GitHub Pages
+│   ├── public/
+│   │   ├── data/            # ← 内容源：profile / posts / works 三个 JSON
+│   │   └── uploads/         # ← 媒体文件（图片 / 视频）
+│   └── vite.config.js       # GitHub Pages base 路径
+├── scripts/
+│   └── content.mjs          # 本地"写内容"脚本（无依赖）
+└── .github/workflows/       # 推送到 main 即自动部署到 Pages
 ```
 
 ---
 
-## 本地开发
-
-### 后端（需要 Java 17 + Maven）
-
-```bash
-cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-# 默认 http://localhost:8080
-# H2 控制台: http://localhost:8080/h2-console
-```
-
-开发模式使用 H2 内存库 + 本地磁盘存储，启动时会自动写入示例数据。
-
-### 前端
+## 本地预览
 
 ```bash
 cd frontend
 npm install
-npm run dev      # http://localhost:5173
+npm run dev        # 打开 http://localhost:5173/SELFIntro/
 ```
 
-浏览器打开 `http://localhost:5173`，默认 API 指向 `http://localhost:8080/api`。
+构建产物本地预览：
+
+```bash
+npm run build
+npm run preview    # 默认 http://localhost:4173/SELFIntro/
+```
 
 ---
 
-## 部署
+## 怎么新增 / 修改内容
 
-### 1) 后端 → Render（或其他云平台）
+内容就是文件，有两种方式：**用脚本（推荐）** 或 **直接手改 JSON**。
 
-1. 在 Render 新建 **Web Service**，连接本仓库，设置：
-   - **Root Directory**: `backend`
-   - **Runtime**: Docker（使用仓库内 `Dockerfile`）
-2. 在 Render 控制台添加环境变量（见下表），然后部署。
-3. 记下后端地址，例如 `https://your-backend.onrender.com`。
+### 方式一：用脚本（最省事）
 
-也可改用 Railway / Fly.io / 任意支持 Docker 的平台，逻辑相同。
+脚本 `scripts/content.mjs` 帮你自动分配 id、处理时间戳、把本地图片/视频复制进 `uploads/` 并改写路径。
 
-### 2) 前端 → GitHub Pages
+```bash
+# 新增一篇动态（正文写在一个 .md 文件里）
+node scripts/content.mjs post:add \
+  --title "我的新笔记" --summary "一句话摘要" \
+  --content ./draft.md --tags "生活,记录" --cover ./cover.jpg
 
-1. 把仓库推到 GitHub（见下方命令）。
-2. 修改两处配置：
-   - `frontend/vite.config.js` 的 `base`：
-     - 项目站点（`用户名.github.io/仓库名`）：设为 `'/仓库名/'`
-     - 用户/组织站点（`用户名.github.io`）：设为 `'/'`
-   - `frontend/.env.production` 的 `VITE_API_BASE`：改成你的后端地址 + `/api`，例如 `https://your-backend.onrender.com/api`
-3. 在 GitHub 仓库 → **Settings → Pages → Build and deployment → Source** 选择 **GitHub Actions**。
-4. 推送到 `main` 分支，GitHub Actions 会自动构建并发布。
+# 新增一个图片作品（本地文件会自动进 uploads/）
+node scripts/content.mjs work:add \
+  --title "作品名" --description "简介" --type IMAGE --media ./work.jpg
 
-### 环境变量（后端）
+# 新增一个视频作品（也可直接给外链）
+node scripts/content.mjs work:add --title "Vlog" --type VIDEO --media https://example.com/v.mp4
 
-| 变量 | 说明 | 示例 |
-| --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | 固定 `prod` | `prod` |
-| `STORAGE_MODE` | `cloudinary` / `local` | `cloudinary` |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary 云名 | `demo` |
-| `CLOUDINARY_API_KEY` | Cloudinary Key | — |
-| `CLOUDINARY_API_SECRET` | Cloudinary Secret | — |
-| `DB_URL` | JDBC 连接串 | `jdbc:mysql://host:3306/portfolio` |
-| `DB_USERNAME` / `DB_PASSWORD` | 数据库账号 | — |
-| `JWT_SECRET` | ≥32 位随机串 | — |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | 后台管理员账号 | — |
-| `CORS_ALLOWED_ORIGINS` | 前端域名（逗号分隔） | `https://user.github.io` |
+# 修改个人资料（仅顶层字段；socials / resumeItems 请直接编辑 profile.json）
+node scripts/content.mjs profile:set --name "张三" --headline "..." --about "..."
 
-> 数据库可用 Render 托管的 MySQL/PostgreSQL（需改 `application-prod.yml` 的驱动与方言），或用 Supabase / Aiven 的免费 MySQL。
+# 查看 / 删除
+node scripts/content.mjs list
+node scripts/content.mjs remove --type post --id 3
+```
 
----
+- 本地媒体文件会被复制到 `frontend/public/uploads/`，URL 自动变成 `/SELFIntro/uploads/...`
+- 远程 URL（`http/https`）会原样保留
+- **注意**：如果改了仓库名，`scripts/content.mjs` 顶部的 `SITE_BASE` 与 `vite.config.js` 的 `base` 要一起改
 
-## 默认管理员
+### 方式二：直接手改 JSON
 
-- 用户名：`admin`
-- 密码：`admin123`
+打开 `frontend/public/data/` 下的文件直接编辑：
 
-请在部署时通过 `ADMIN_USERNAME` / `ADMIN_PASSWORD` 环境变量修改，避免被他人登录。
+- `profile.json`：个人资料 + 简历（`resumeItems` 是数组，每条含 `category / title / org / description / startYear / endYear / sortOrder`）
+- `posts.json`：数组，每条 `{ id, title, summary, content, coverUrl, images[], createdAt, updatedAt, tags[] }`
+- `works.json`：数组，每条 `{ id, title, description, mediaType("IMAGE"|"VIDEO"), url, coverUrl, createdAt }`
 
-后台入口：`/#/admin/login`（hash 路由）。
+媒体文件手动放进 `frontend/public/uploads/`，然后在 JSON 里把 `url` / `coverUrl` 写成 `/SELFIntro/uploads/文件名`。
 
 ---
 
-## API 一览
+## 部署（GitHub Pages）
 
-| 方法 | 路径 | 说明 | 鉴权 |
-| --- | --- | --- | --- |
-| POST | `/api/auth/login` | 管理员登录，返回 JWT | 否 |
-| GET | `/api/profile` | 获取个人资料 + 简历 | 否 |
-| PUT | `/api/profile` | 更新资料 | 是 |
-| GET | `/api/posts?page=&size=` | 笔记列表（分页） | 否 |
-| GET | `/api/posts/{id}` | 笔记详情 | 否 |
-| POST/PUT/DELETE | `/api/posts[/id]` | 增改删笔记 | 是 |
-| GET | `/api/works` | 作品列表 | 否 |
-| GET | `/api/works/{id}` | 作品详情 | 否 |
-| POST/PUT/DELETE | `/api/works[/id]` | 增改删作品 | 是 |
-| POST | `/api/upload` | 上传媒体，返回 URL | 是 |
+1. 改完内容后构建并提交：
+   ```bash
+   npm run build
+   git add -A
+   git commit -m "更新内容"
+   git push
+   ```
+2. 在 GitHub 仓库 → **Settings → Pages → Source** 选择 **GitHub Actions**。
+3. 推送到 `main` 分支后，GitHub Actions 会自动执行 `npm run build` 并发布到 Pages。
 
-所有受保护接口需在请求头带 `Authorization: Bearer <token>`。
+> 站点基路径默认 `/SELFIntro/`（对应仓库名）。若仓库改名，请同步修改 `frontend/vite.config.js` 的 `base` 与 `scripts/content.mjs` 的 `SITE_BASE`。
+
+---
+
+## 常见问题
+
+- **媒体文件太大？** 建议单文件控制在 50MB 内；GitHub 单文件上限约 100MB。大视频可用外链（直接给 `https://` 地址）。
+- **改完访客多久看到？** 推送后 GitHub Actions 通常 1 分钟内完成部署，浏览器强刷（Ctrl/Cmd+Shift+R）即可。
+- **没有后台登录了？** 是的，纯静态站没有登录概念——你本人通过编辑文件 / 运行脚本来管理内容，访客只能看。

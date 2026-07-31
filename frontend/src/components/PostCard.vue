@@ -15,7 +15,7 @@ defineProps({
       :alt="post.title"
       loading="lazy"
     />
-    <div v-else class="card-media" style="display:flex;align-items:center;justify-content:center;color:#8b93a3">无封面</div>
+    <div v-else class="card-media" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无封面</div>
     <div class="card-body">
       <h3>{{ post.title }}</h3>
       <p v-if="post.summary">{{ post.summary }}</p>

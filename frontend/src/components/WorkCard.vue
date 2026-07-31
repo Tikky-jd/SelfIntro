@@ -21,10 +21,13 @@ defineProps({
       playsinline
       preload="metadata"
     ></video>
-    <div v-else class="card-media" style="display:flex;align-items:center;justify-content:center;color:#8b93a3">无封面</div>
+    <div v-else class="card-media" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">无封面</div>
     <div class="card-body">
       <h3>{{ work.title }}</h3>
       <p v-if="work.description">{{ work.description }}</p>
+      <div class="tags" v-if="work.tags && work.tags.length" style="margin-bottom:8px">
+        <span class="tag" v-for="t in work.tags" :key="t">{{ t }}</span>
+      </div>
       <span class="badge" :class="{ video: work.mediaType === 'VIDEO' }">
         {{ work.mediaType === 'VIDEO' ? '视频' : '图片' }}
       </span>

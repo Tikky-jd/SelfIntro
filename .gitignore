@@ -1,6 +1,7 @@
 # ---- Backend ----
 backend/target/
 backend/uploads/
+backend/data/
 backend/.mvn/
 *.iml
 backend/HELP.md
@@ -13,3 +14,13 @@ backend/HELP.md
 
 # ---- Logs ----
 *.log
+
+# ---- Local workspace memory (not part of the site) ----
+.workbuddy/
+
+# ---- Vite temp cache ----
+frontend/vite.config.js.timestamp-*.mjs
+
+# ---- Root-level misplaced lockfile (frontend has its own) ----
+/package-lock.json
+

@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "title": "示例作品",
+    "description": "这是一张示例图片，可在后台替换为你的真实作品。",
+    "mediaType": "IMAGE",
+    "url": "https://picsum.photos/seed/selfintro/1200/800",
+    "coverUrl": "https://picsum.photos/seed/selfintro/1200/800",
+    "tags": [],
+    "createdAt": "2026-07-30T15:51:45.140033"
+  },
+  {
+    "id": 2,
+    "title": "UE动态设计（一）",
+    "description": "UE MotionDesign初尝，味道像小饼干！",
+    "content": "工作流：Unreal 5.8 、AE2022\n\n在 UE5 的更新中，端上来了一块小饼干——Motion Design。该模块的实现极有可能改变原来 AE + C4D 的工作流吧。整体用下来很方便，渲染也快得发毛。对比 AE 动不动就卡死，体验感真的提升了很多。\n\n该作品很简单，使用了一个 Grid Cloner，加了一个扭曲效果，然后把 XY 的间距做了动画，让它在扭曲到一定程度的时候靠近一些（整体收拢一点），有一种收缩感。原本是想用全局缩放（改变每一个小方块的大小）的，但是渲染过程中无法同时渲染全局缩放和扭曲效果，不知道为什么。\n\n最后在 AE 加了文字，两个文字层放于三维层的前后。",
+    "mediaType": "VIDEO",
+    "url": "/SELFIntro/uploads/DT_01_20260731.mp4",
+    "coverUrl": "/SELFIntro/uploads/ZPFM_01_20260731.png",
+    "tags": ["动态设计", "三维动画"],
+    "createdAt": "2026-07-31T15:53:00.000000"
+  }
+]

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getPost } from '../api/posts'
+import { getPostContent } from '../api/content'
 import MarkdownView from '../components/MarkdownView.vue'
 import { formatDate } from '../utils/format'
 
@@ -11,7 +11,7 @@ const loading = ref(true)
 
 onMounted(async () => {
   try {
-    post.value = await getPost(route.params.id)
+    post.value = await getPostContent(route.params.id)
   } catch (e) {
     post.value = null
   } finally {

@@ -1,0 +1,68 @@
+{
+  "id": 1,
+  "name": "陈家栋",
+  "headline": "游戏买量视频设计 · UE / Blender 三维创作 · 视频后期 (PR / AE / 剪映)",
+  "avatarUrl": null,
+  "email": "1920929599@qq.com",
+  "phone": "13065520820",
+  "location": "浙江杭州",
+  "about": "2003 年生，现居浙江杭州。具有较强的自主学习能力，善于总结归纳、快速掌握新知识；遵循职业道德规范，诚实守信，尊重他人，有较强的责任心与团队协作精神。专注于游戏买量视频设计与 UE / Blender 三维创作。",
+  "socials": [
+    {
+      "label": "Email",
+      "url": "mailto:1920929599@qq.com"
+    }
+  ],
+  "resumeItems": [
+    {
+      "id": 1,
+      "category": "EDUCATION",
+      "title": "数字媒体技术 · 学士",
+      "org": "浙江科技大学",
+      "description": "主修：HTML5 程序设计、数字图像处理、前端高级程序设计、游戏设计与开发、数字媒体后期制作、数字影像技术、图形技术、游戏场景设计、交互动画技术等。GPA 3.79/5.0（专业排名前 4%）。",
+      "startYear": "2022.09",
+      "endYear": "2026.06",
+      "sortOrder": 0
+    },
+    {
+      "id": 2,
+      "category": "EXPERIENCE",
+      "title": "视频设计",
+      "org": "乐厘网络",
+      "description": "负责三国手游类买量素材混剪，平均周产出 100 条投放视频；独立完成福利弹窗、海报类等原创素材，并根据投放反馈快速修改。深度使用 AIGC 工具，独立完成创意前贴的策划与生成，以 AI 生成高质量吸睛画面提升素材质量。",
+      "startYear": "2026.03",
+      "endYear": "2026.06",
+      "sortOrder": 1
+    },
+    {
+      "id": 3,
+      "category": "EXPERIENCE",
+      "title": "摄像 / 后期",
+      "org": "风盛传媒",
+      "description": "负责拍摄与剪辑，深度参与地铁媒体视觉内容制作；累计执行 100+ 组商业广告的视频与照片拍摄，独立完成 60+ 条成片剪辑与包装。绍兴地铁宣传片项目核心成员，承担剪辑一职。",
+      "startYear": "2025.06",
+      "endYear": "2025.09",
+      "sortOrder": 2
+    },
+    {
+      "id": 4,
+      "category": "EXPERIENCE",
+      "title": "摄像 / 剪辑",
+      "org": "暑期社会实践",
+      "description": "负责活动全程跟拍（开/闭幕式、实地调研、访谈交流），捕捉重要瞬间；对素材整理筛选后使用 PR 与剪映进行剪辑制作，含调色、音频处理与字幕。",
+      "startYear": "2024.07",
+      "endYear": "2024.09",
+      "sortOrder": 3
+    },
+    {
+      "id": 5,
+      "category": "SKILL",
+      "title": "专业技能 / 证书 / 荣誉",
+      "org": "视频后期：剪映/PR/AE；三维创作：UE/Blender",
+      "description": "CET-6, 普通话二乙, 计算机二级, 校级二等奖学金, 三好学生, 优秀团员",
+      "startYear": "",
+      "endYear": "",
+      "sortOrder": 4
+    }
+  ]
+}
