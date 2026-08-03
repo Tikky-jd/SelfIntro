@@ -19,5 +19,16 @@
     "coverUrl": "uploads/ZPFM_01_20260731.png",
     "tags": ["动态设计", "三维动画"],
     "createdAt": "2026-07-31T15:53:00.000000"
+  },
+  {
+    "id": 3,
+    "title": "UE动态设计（二）",
+    "description": "UE MotionDesign 初步学习中",
+    "content": "原版https://www.bilibili.com/video/BV1Ud6VBXEvp?spm_id_from=333.788.videopod.sections&vd_source=66c48dca001a710bf0195bd1483b9502。\n\n在B站偶然间刷到这个视频，想着简单做一下。\n\n通过这个案例对效应器、置换等概念有了更深入的了解。效应器可以为克隆器添加噪波、修改颜色、施加物理效果、修改所影响克隆体的基本属性等。",
+    "mediaType": "VIDEO",
+    "url": "uploads/DT_02_20260803.mp4",
+    "coverUrl": "uploads/ZPFM_02_20260803.jpg",
+    "tags": ["动态设计", "三维动画"],
+    "createdAt": "2026-08-03T13:52:29.000000"
   }
 ]
