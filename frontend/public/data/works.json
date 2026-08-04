@@ -41,5 +41,16 @@
     "coverUrl": "uploads/ZP_01_20260804.png",
     "tags": ["动态设计", "三维动画"],
     "createdAt": "2026-08-04T11:27:17.000000"
+  },
+  {
+    "id": 5,
+    "title": "UE动态设计（四）",
+    "description": "UE MotionDesign 初步学习中",
+    "content": "原版参考：https://www.bilibili.com/video/BV1db421h7LV/?spm_id_from=333.337.search-card.all.click&vd_source=66c48dca001a710bf0195bd1483b9502\n\n这个案例利用 UE Motion Design 的动态设计工具实现植被生长动画。整体逻辑与上一个粒子文字效果类似：把克隆器（Cloner）的载体从球形替换为植被模型，再将其附着到树根模型的三角面上，让植被沿树表面自然分布。最后通过效果器（Effector）驱动克隆体从无到有、逐步生长，形成植被在树干上蔓延展开的效果。",
+    "mediaType": "VIDEO",
+    "url": "uploads/DT_03_20260804.mp4",
+    "coverUrl": "uploads/ZPFM_03_20260804.jpg",
+    "tags": ["动态设计", "三维动画"],
+    "createdAt": "2026-08-04T16:42:00.000000"
   }
 ]
