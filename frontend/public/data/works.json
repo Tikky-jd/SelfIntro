@@ -30,5 +30,16 @@
     "coverUrl": "uploads/ZPFM_02_20260803.jpg",
     "tags": ["动态设计", "三维动画"],
     "createdAt": "2026-08-03T13:52:29.000000"
+  },
+  {
+    "id": 4,
+    "title": "UE动态设计（二）",
+    "description": "UE MotionDesign 初步学习中",
+    "content": "原版参考：https://www.bilibili.com/video/BV1bAKWeDEuh?spm_id_from=333.788.videopod.episodes&vd_source=66c48dca001a710bf0195bd1483b9502&p=10\n\n这个案例把 Cloner（克隆器）附着到文字模型上，利用克隆器的布局方式生成粒子文字效果。为了让视觉更有呼吸感，我调整了粒子的生命周期与大小参数：粒子初生时较小，随后逐渐放大，消亡前再缓缓缩小，形成自然的生长-消逝节奏。",
+    "mediaType": "IMAGE",
+    "url": "uploads/ZP_01_20260804.png",
+    "coverUrl": "uploads/ZP_01_20260804.png",
+    "tags": ["动态设计", "三维动画"],
+    "createdAt": "2026-08-04T11:27:17.000000"
   }
 ]
