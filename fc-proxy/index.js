@@ -20,8 +20,8 @@ const PROVIDERS = {
   xfyun:   { type: 'openai', base: 'https://maas-api.cn-huabei-1.xf-yun.com/v2' },
 }
 
-// 兜底允许来源（取不到请求 Origin 时使用）
-const FALLBACK_ORIGIN = '*'
+// CORS 白名单：只允许本站来源，其他网站无法在浏览器中调用本代理
+const ALLOWED_ORIGINS = new Set(['https://tikky-jd.github.io'])
 
 // 简单限流：每 IP 每分钟最多 20 次（FC 多实例下为尽力而为）
 const WINDOW_MS = 60000
@@ -30,15 +30,19 @@ const hits = new Map()
 
 exports.handler = async (req, resp, context) => {
   const headers = req.headers || {}
-  const origin = headers.origin || headers.Origin || FALLBACK_ORIGIN
+  const origin = headers.origin || headers.Origin
+  // 仅对白名单来源回写 ACAO；白名单外的跨域请求浏览器会自动拦截
+  const acao = origin && ALLOWED_ORIGINS.has(origin) ? origin : ''
 
   const out = (code, payload) => {
     resp.setStatusCode(code)
     resp.setHeader('content-type', 'application/json; charset=utf-8')
-    resp.setHeader('access-control-allow-origin', origin)
-    resp.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS')
-    resp.setHeader('access-control-allow-headers', 'Content-Type, Authorization')
-    resp.setHeader('vary', 'Origin')
+    if (acao) {
+      resp.setHeader('access-control-allow-origin', acao)
+      resp.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS')
+      resp.setHeader('access-control-allow-headers', 'Content-Type, Authorization, x-site-key')
+      resp.setHeader('vary', 'Origin')
+    }
     resp.send(typeof payload === 'string' ? payload : JSON.stringify(payload))
   }
 
@@ -59,8 +63,22 @@ exports.handler = async (req, resp, context) => {
     return out(404, { error: 'not found', path: rawPath, method })
   }
 
+  // 业务层来源白名单：非本站来源的跨域请求直接拒绝，避免第三方网站盗用消耗额度。
+  // 注意：FC 的 HTTP 触发器网关会自动回显 Origin 并注入 ACAO 头，仅靠 CORS 头无法拦截，
+  // 必须在业务层真正拒绝，才能阻止请求转发到上游大模型。
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return out(403, { error: '拒绝访问：来源不在允许列表' })
+  }
+
   const ip = String(req.clientIP || req.ip || 'unknown')
   if (!rateOK(ip)) return out(429, { error: '请求过于频繁，请稍后再试' })
+
+  // 访问口令校验：防止第三方脚本直连盗用（仅当 FC 上配置了 SITE_KEY 时生效）
+  const siteKey = process.env.SITE_KEY
+  if (siteKey) {
+    const provided = headers['x-site-key'] || headers['X-Site-Key'] || ''
+    if (provided !== siteKey) return out(403, { error: '拒绝访问：缺少或错误的访问口令' })
+  }
 
   let raw = req.body
   if (Buffer.isBuffer(raw)) raw = raw.toString('utf8')

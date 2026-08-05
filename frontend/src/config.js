@@ -7,6 +7,10 @@ export const AI_API_BASE =
   import.meta.env.VITE_AI_API_BASE ||
   'https://1086385896267634.cn-hangzhou.fc.aliyuncs.com/2016-08-15/proxy/selfintro-proxy/ai-proxy'
 
+// 访问口令：与 FC 函数环境变量 SITE_KEY 保持一致。
+// 说明：纯静态站点无法真正保密，此口令仅用于提高第三方脚本直连盗用的门槛，并非强鉴权。
+export const AI_SITE_KEY = '385oFUEfTgnlpq8UEZ_tjs5aHIu0ANLA'
+
 // 可选模型列表。provider 字段对应 fc-proxy 里 PROVIDERS 的键；
 // type='llm' 走 /chat 代理，type='video' 为视频生成（暂未接入）。
 // 想启用某个模型：在 FC 函数的「环境变量」里加 <PROVIDER大写>_KEY 即可，前端无需改动。

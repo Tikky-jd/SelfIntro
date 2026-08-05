@@ -1,6 +1,6 @@
 <script setup>
 import { ref, nextTick } from 'vue'
-import { AI_API_BASE, AI_MODELS } from '../config.js'
+import { AI_API_BASE, AI_MODELS, AI_SITE_KEY } from '../config.js'
 
 const models = AI_MODELS
 const selected = ref(models[0].id)
@@ -28,7 +28,7 @@ async function send() {
   try {
     const res = await fetch(`${AI_API_BASE}/chat`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-site-key': AI_SITE_KEY },
       body: JSON.stringify({
         provider: m.provider,
         model: m.model,
@@ -64,7 +64,7 @@ function onKey(e) {
   <section class="section ai-page">
     <div class="container">
       <h1 class="section-title">AI 应用</h1>
-      <p class="section-sub">调用各类大模型，密钥全程留在服务端代理，前端不暴露。所有请求经你自己的 Cloudflare Worker 转发。</p>
+      <p class="section-sub">调用各类大模型，密钥全程留在服务端代理，前端不暴露。所有请求经你自己的阿里云函数计算代理转发。</p>
 
       <div class="ai-card card">
         <div class="ai-head">

@@ -8,8 +8,9 @@
 // 可选环境变量：
 //   FC_ACCOUNT_ID（默认 1086385896267634）、FC_REGION（默认 cn-hangzhou）
 //   FC_SERVICE（默认 selfintro-proxy）、FC_FUNCTION（默认 ai-proxy）
-//   XFYUN_KEY / DEEPSEEK_KEY / KIMI_KEY / GROQ_KEY / OPENAI_KEY / GEMINI_KEY
-//     —— 若设置了，会一并写入函数环境变量；不设置则保持 FC 上已有的值不变。
+//   XFYUN_KEY / DEEPSEEK_KEY / KIMI_KEY / GROQ_KEY / OPENAI_KEY / GEMINI_KEY / SITE_KEY
+//     —— 若设置了，会合并进函数环境变量；不设置则保留 FC 上已有的值（不会清空）。
+//     例如首次部署只需提供 SITE_KEY；已配好的 XFYUN_KEY 会自动保留。
 //
 // 依赖：npm i adm-zip @alicloud/fc2
 
@@ -34,13 +35,6 @@ const REGION = process.env.FC_REGION || 'cn-hangzhou'
 const SERVICE = process.env.FC_SERVICE || 'selfintro-proxy'
 const FUNCTION = process.env.FC_FUNCTION || 'ai-proxy'
 
-const envKeys = ['XFYUN_KEY', 'DEEPSEEK_KEY', 'KIMI_KEY', 'QWEN_KEY', 'GROQ_KEY', 'OPENAI_KEY', 'GEMINI_KEY']
-const environmentVariables = {}
-for (const k of envKeys) if (process.env[k]) environmentVariables[k] = process.env[k]
-
-const zip = new AdmZip()
-zip.addLocalFile(path.join(__dirname, 'index.js'))
-
 const client = new FC(ACCOUNT_ID, {
   accessKeyID: AK,
   accessKeySecret: SK,
@@ -48,18 +42,36 @@ const client = new FC(ACCOUNT_ID, {
   timeout: 60000,
 })
 
+// 先读取 FC 上已有环境变量（如已配好的 XFYUN_KEY），再合并本次提供的，避免覆盖清空
+let existing = {}
+try {
+  const f = await client.getFunction(SERVICE, FUNCTION)
+  existing = (f && f.data && f.data.environmentVariables) || (f && f.environmentVariables) || {}
+  console.log('FC 现有环境变量：', Object.keys(existing).join(', ') || '(无)')
+} catch (e) {
+  console.warn('⚠️ 读取现有环境变量失败，将仅应用本次提供的：', e.code || e.message)
+}
+
+const envKeys = ['XFYUN_KEY', 'DEEPSEEK_KEY', 'KIMI_KEY', 'QWEN_KEY', 'GROQ_KEY', 'OPENAI_KEY', 'GEMINI_KEY', 'SITE_KEY']
+const environmentVariables = { ...existing }
+for (const k of envKeys) if (process.env[k]) environmentVariables[k] = process.env[k]
+
+const zip = new AdmZip()
+zip.addLocalFile(path.join(__dirname, 'index.js'))
+
 const payload = {
   handler: 'index.handler',
   runtime: 'nodejs18',
   timeout: 60,
   memorySize: 512,
   code: { zipFile: zip.toBuffer().toString('base64') },
+  environmentVariables,
 }
-if (Object.keys(environmentVariables).length) payload.environmentVariables = environmentVariables
 
 try {
   const r = await client.updateFunction(SERVICE, FUNCTION, payload)
   console.log('✅ 已更新：', r.data?.functionName, '| codeSize =', r.data?.codeSize)
+  console.log('本次写入的环境变量：', Object.keys(environmentVariables).join(', '))
   console.log('函数地址：',
     `https://${ACCOUNT_ID}.${REGION}.fc.aliyuncs.com/2016-08-15/proxy/${SERVICE}/${FUNCTION}/chat`)
 } catch (e) {
