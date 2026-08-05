@@ -1,0 +1,6 @@
+{
+  "name": "selfintro-ai-proxy-fc",
+  "version": "1.0.0",
+  "description": "AI 应用页代理 - 阿里云函数计算 FC 版（Node.js 18/20，HTTP 触发器，零依赖）",
+  "main": "index.js"
+}

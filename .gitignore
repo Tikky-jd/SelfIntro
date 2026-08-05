@@ -35,3 +35,9 @@ frontend/.env.*
 # ---- Cloudflare Worker 本地状态（wrangler 生成，勿提交）----
 worker/.wrangler/
 
+# ---- FC 代理本地临时/调试文件（可能含凭证，勿提交）----
+fc-proxy/.dbg/
+fc-proxy/.deploy-tmp.js
+fc-proxy/.dbg-deploy.js
+fc-proxy/node_modules/
+
