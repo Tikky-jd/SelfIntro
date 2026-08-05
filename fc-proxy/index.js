@@ -9,6 +9,8 @@
 // 密钥从函数「环境变量」读取，变量名 = 大写 provider 名 + _KEY（如 XFYUN_KEY）。
 // 前端只调这个函数的 /chat，由它保管密钥并转发，密钥永不进前端 / 仓库。
 
+const crypto = require('crypto') // 仅用 Node 核心模块做 HMAC 签名，不引入 npm 依赖
+
 const PROVIDERS = {
   openai:  { type: 'openai', base: 'https://api.openai.com/v1' },
   deepseek:{ type: 'openai', base: 'https://api.deepseek.com/v1' },
@@ -18,6 +20,8 @@ const PROVIDERS = {
   gemini:  { type: 'gemini', base: 'https://generativelanguage.googleapis.com/v1beta' },
   // 讯飞星辰 MaaS（OpenAI 兼容接口，Bearer 鉴权；服务创建于 2026-01-10 后用 /v2）
   xfyun:   { type: 'openai', base: 'https://maas-api.cn-huabei-1.xf-yun.com/v2' },
+  // 讯飞星火文生图（tti HTTP 接口，HMAC-SHA256 签名鉴权，非 OpenAI 兼容）
+  'xfyun-img': { type: 'xfyun-img' },
 }
 
 // CORS 白名单：只允许本站来源，其他网站无法在浏览器中调用本代理
@@ -91,6 +95,36 @@ exports.handler = async (req, resp, context) => {
   if (!provider) return out(400, { error: `未知 provider: ${body.provider}` })
   if (!body.model) return out(400, { error: '缺少 model' })
 
+  // 讯飞星火文生图（tti HTTP 接口，HMAC-SHA256 签名鉴权）
+  if (body.provider === 'xfyun-img') {
+    const apiKey = process.env.XFYUN_IMG_KEY
+    const apiSecret = process.env.XFYUN_IMG_SECRET
+    const appId = process.env.XFYUN_IMG_APPID
+    if (!apiKey || !apiSecret || !appId) {
+      return out(500, { error: '未配置讯飞文生图密钥（函数环境变量需设置 XFYUN_IMG_KEY / XFYUN_IMG_SECRET / XFYUN_IMG_APPID）' })
+    }
+    const prompt = (body.messages || []).filter(m => m.role === 'user').map(m => m.content).pop() || body.prompt || ''
+    if (!prompt) return out(400, { error: '缺少 prompt' })
+    try {
+      const url = buildXfyunImgUrl(apiKey, apiSecret)
+      const reqBody = JSON.stringify({
+        header: { app_id: appId, uid: 'selfintro-site' },
+        parameter: { chat: { domain: body.model || 'general', width: 1024, height: 1024 } },
+        payload: { message: { text: [{ role: 'user', content: prompt }] } },
+      })
+      const up = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: reqBody })
+      const data = await up.json()
+      if (!data || !data.header || data.header.code !== 0) {
+        return out(502, { error: '讯飞文生图失败：' + (data && data.header ? data.header.code + ' ' + data.header.message : '未知错误') })
+      }
+      const b64 = data.payload && data.payload.choices && data.payload.choices.text && data.payload.choices.text[0] && data.payload.choices.text[0].content
+      if (!b64) return out(502, { error: '讯飞文生图未返回图片数据' })
+      return out(200, { image: 'data:image/png;base64,' + b64 })
+    } catch (e) {
+      return out(500, { error: String(e && e.message ? e.message : e) })
+    }
+  }
+
   const envName = `${String(body.provider).toUpperCase()}_KEY`
   const key = process.env[envName]
   if (!key) return out(500, { error: `未配置 ${body.provider} 的密钥（请在函数环境变量中添加 ${envName}）` })
@@ -133,6 +167,20 @@ exports.handler = async (req, resp, context) => {
   } catch (err) {
     return out(500, { error: String(err && err.message ? err.message : err) })
   }
+}
+
+// 讯飞 HTTP 通用鉴权：对 host/date/request-line 做 HMAC-SHA256，结果作为 authorization query 参数
+function buildXfyunImgUrl(apiKey, apiSecret) {
+  const host = 'spark-api.cn-huabei-1.xf-yun.com'
+  const path = '/v2.1/tti'
+  const method = 'POST'
+  const date = new Date().toUTCString() // RFC1123 GMT，与讯飞服务器时钟偏差需 < 5 分钟
+  const signatureOrigin = `host: ${host}\ndate: ${date}\n${method} ${path} HTTP/1.1`
+  const signature = crypto.createHmac('sha256', apiSecret).update(signatureOrigin).digest('base64')
+  const authorizationOrigin = `api_key="${apiKey}", algorithm="hmac-sha256", headers="host date request-line", signature="${signature}"`
+  const authorization = Buffer.from(authorizationOrigin).toString('base64')
+  const q = new URLSearchParams({ host, date, authorization })
+  return `https://${host}${path}?${q.toString()}`
 }
 
 function rateOK(ip) {

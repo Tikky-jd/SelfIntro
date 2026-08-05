@@ -26,29 +26,52 @@ async function send() {
   await nextTick(); scroll()
   loading.value = true
   try {
-    const res = await fetch(`${AI_API_BASE}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-site-key': AI_SITE_KEY },
-      body: JSON.stringify({
-        provider: m.provider,
-        model: m.model,
-        messages: messages.value.map(x => ({ role: x.role, content: x.content })),
-        stream: false,
-      }),
-    })
-    if (!res.ok) {
-      const t = await res.text().catch(() => '')
-      throw new Error(`调用失败 (${res.status}) ${t.slice(0, 160)}`)
+    if (m.type === 'image') {
+      const img = await genImage(m, text)
+      messages.value.push({ role: 'assistant', image: img })
+    } else {
+      const reply = await chat(m, text)
+      messages.value.push({ role: 'assistant', content: (reply || '(空回复)').trim() })
     }
-    const data = await res.json()
-    const reply = data?.choices?.[0]?.message?.content
-    messages.value.push({ role: 'assistant', content: (reply || '(空回复)').trim() })
   } catch (e) {
     error.value = e.message || '调用失败，请确认代理函数已部署且 AI_API_BASE 配置正确。'
   } finally {
     loading.value = false
     await nextTick(); scroll()
   }
+}
+
+async function postChat(m, payload) {
+  const res = await fetch(`${AI_API_BASE}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-site-key': AI_SITE_KEY },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok) {
+    const t = await res.text().catch(() => '')
+    throw new Error(`调用失败 (${res.status}) ${t.slice(0, 160)}`)
+  }
+  return res.json()
+}
+
+async function chat(m, text) {
+  const data = await postChat(m, {
+    provider: m.provider,
+    model: m.model,
+    messages: messages.value.map(x => ({ role: x.role, content: x.content })),
+    stream: false,
+  })
+  return data?.choices?.[0]?.message?.content
+}
+
+async function genImage(m, prompt) {
+  const data = await postChat(m, {
+    provider: m.provider,
+    model: m.model,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  if (!data || !data.image) throw new Error('未返回图片：' + JSON.stringify(data).slice(0, 160))
+  return data.image
 }
 
 function scroll() {
@@ -64,7 +87,7 @@ function onKey(e) {
   <section class="section ai-page">
     <div class="container">
       <h1 class="section-title">AI 应用</h1>
-      <p class="section-sub">调用各类大模型，密钥全程留在服务端代理，前端不暴露。所有请求经你自己的阿里云函数计算代理转发。</p>
+      <p class="section-sub">你的小帮手随时待命！</p>
 
       <div class="ai-card card">
         <div class="ai-head">
@@ -79,11 +102,13 @@ function onKey(e) {
 
         <div class="chat" ref="box">
           <div v-if="!messages.length" class="chat-empty">
-            和 {{ current().label }} 聊聊吧～（Ctrl/⌘ + Enter 发送）
+            <template v-if="current().type === 'image'">描述你想生成的画面，例如「一座雪山下的湛蓝湖泊」（Ctrl/⌘ + Enter 发送）</template>
+            <template v-else>和 {{ current().label }} 聊聊吧～（Ctrl/⌘ + Enter 发送）</template>
           </div>
           <div v-for="(msg, i) in messages" :key="i" class="bubble" :class="msg.role">
             <div class="who">{{ msg.role === 'user' ? '我' : 'AI' }}</div>
-            <div class="text">{{ msg.content }}</div>
+            <div v-if="msg.image" class="text"><img :src="msg.image" alt="生成结果" class="gen-img" /></div>
+            <div v-else class="text">{{ msg.content }}</div>
           </div>
           <div v-if="loading" class="bubble assistant">
             <div class="who">AI</div><div class="text">思考中…</div>
@@ -93,7 +118,7 @@ function onKey(e) {
         <div v-if="error" class="banner">{{ error }}</div>
 
         <div class="ai-input">
-          <textarea v-model="input" @keydown="onKey" placeholder="输入你的问题…"></textarea>
+          <textarea v-model="input" @keydown="onKey" :placeholder="current().type === 'image' ? '描述想要的画面…' : '输入你的问题…'"></textarea>
           <button class="btn btn-primary" :disabled="loading || !input.trim()" @click="send">
             {{ loading ? '发送中…' : '发送' }}
           </button>
@@ -116,8 +141,29 @@ function onKey(e) {
 .bubble.user { margin-left: auto; background: var(--grad-warm); color: #fff; }
 .bubble.assistant { background: #fff; border: 1px solid var(--border); }
 .bubble.assistant .text { white-space: pre-wrap; }
-.ai-input { display: flex; gap: 10px; align-items: flex-end; }
-.ai-input textarea { flex: 1; min-height: 64px; }
+.ai-input {
+  display: flex; gap: 10px; align-items: flex-end;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 8px 8px 8px 16px;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, .08);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ai-input:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft), 0 8px 24px rgba(255, 46, 126, .12);
+}
+.ai-input textarea {
+  flex: 1; min-height: 46px; max-height: 160px;
+  border: none; outline: none; resize: none;
+  background: transparent;
+  font-family: inherit; font-size: .95rem; line-height: 1.6; color: var(--text);
+  padding: 10px 0;
+}
+.ai-input textarea::placeholder { color: var(--muted); }
+.ai-input .btn { margin-bottom: 2px; }
+.gen-img { max-width: 100%; border-radius: 12px; display: block; margin-top: 2px; }
 @media (max-width: 560px) {
   .chat { height: 380px; }
   .ai-head { flex-direction: column; align-items: stretch; }

@@ -8,7 +8,8 @@
 // 可选环境变量：
 //   FC_ACCOUNT_ID（默认 1086385896267634）、FC_REGION（默认 cn-hangzhou）
 //   FC_SERVICE（默认 selfintro-proxy）、FC_FUNCTION（默认 ai-proxy）
-//   XFYUN_KEY / DEEPSEEK_KEY / KIMI_KEY / GROQ_KEY / OPENAI_KEY / GEMINI_KEY / SITE_KEY
+//   XFYUN_KEY / DEEPSEEK_KEY / KIMI_KEY / QWEN_KEY / GROQ_KEY / OPENAI_KEY / GEMINI_KEY / SITE_KEY
+//   XFYUN_IMG_KEY / XFYUN_IMG_SECRET / XFYUN_IMG_APPID（讯飞星火文生图三要素）
 //     —— 若设置了，会合并进函数环境变量；不设置则保留 FC 上已有的值（不会清空）。
 //     例如首次部署只需提供 SITE_KEY；已配好的 XFYUN_KEY 会自动保留。
 //
@@ -39,7 +40,7 @@ const client = new FC(ACCOUNT_ID, {
   accessKeyID: AK,
   accessKeySecret: SK,
   region: REGION,
-  timeout: 60000,
+  timeout: 120000,
 })
 
 // 先读取 FC 上已有环境变量（如已配好的 XFYUN_KEY），再合并本次提供的，避免覆盖清空
@@ -52,7 +53,8 @@ try {
   console.warn('⚠️ 读取现有环境变量失败，将仅应用本次提供的：', e.code || e.message)
 }
 
-const envKeys = ['XFYUN_KEY', 'DEEPSEEK_KEY', 'KIMI_KEY', 'QWEN_KEY', 'GROQ_KEY', 'OPENAI_KEY', 'GEMINI_KEY', 'SITE_KEY']
+const envKeys = ['XFYUN_KEY', 'DEEPSEEK_KEY', 'KIMI_KEY', 'QWEN_KEY', 'GROQ_KEY', 'OPENAI_KEY', 'GEMINI_KEY', 'SITE_KEY',
+  'XFYUN_IMG_KEY', 'XFYUN_IMG_SECRET', 'XFYUN_IMG_APPID']
 const environmentVariables = { ...existing }
 for (const k of envKeys) if (process.env[k]) environmentVariables[k] = process.env[k]
 
@@ -62,7 +64,7 @@ zip.addLocalFile(path.join(__dirname, 'index.js'))
 const payload = {
   handler: 'index.handler',
   runtime: 'nodejs18',
-  timeout: 60,
+  timeout: 120,
   memorySize: 512,
   code: { zipFile: zip.toBuffer().toString('base64') },
   environmentVariables,
