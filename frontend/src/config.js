@@ -17,8 +17,8 @@ export const AI_SITE_KEY = '385oFUEfTgnlpq8UEZ_tjs5aHIu0ANLA'
 export const AI_MODELS = [
   // 已配置密钥，可直接使用
   { id: 'qwen', label: 'Qwen · 通义千问（讯飞星辰）', provider: 'xfyun', model: 'xop35qwen2b', type: 'llm' },
-  // 讯飞星火文生图（已在 FC 配置 XFYUN_IMG_KEY/SECRET/APPID，可直接使用）
-  { id: 'xfyun-img', label: '讯飞星火 · 文生图', provider: 'xfyun-img', model: 'general', type: 'image' },
+  // 讯飞星辰文生图（已在 FC 配置 XFYUN_IMG_KEY/SECRET/APPID，走 MaaS tti 接口，modelId=xopzimageturbo）
+  { id: 'xfyun-img', label: '讯飞星辰 · 文生图 (xopzimageturbo)', provider: 'xfyun-img', model: 'xopzimageturbo', type: 'image' },
   // 以下需在 FC 环境变量中补密钥后才可用
   { id: 'deepseek', label: 'DeepSeek · deepseek-chat（需配置密钥）', provider: 'deepseek', model: 'deepseek-chat', type: 'llm' },
   { id: 'kimi', label: 'Kimi · moonshot-v1-8k（需配置密钥）', provider: 'kimi', model: 'moonshot-v1-8k', type: 'llm' },
