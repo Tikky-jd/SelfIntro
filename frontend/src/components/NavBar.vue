@@ -10,6 +10,7 @@
         <router-link to="/resume">简历</router-link>
         <router-link to="/dynamics">动态</router-link>
         <router-link to="/works">作品</router-link>
+        <router-link to="/ai">AI</router-link>
       </nav>
     </div>
   </header>
