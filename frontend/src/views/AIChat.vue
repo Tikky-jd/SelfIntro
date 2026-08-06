@@ -68,8 +68,11 @@ async function send() {
       const img = await genImage(m, text)
       messages.value.push({ role: 'assistant', image: img })
     } else {
-      const reply = await chat(m, text)
-      messages.value.push({ role: 'assistant', content: (reply || '(空回复)').trim() })
+      // 流式打字机：先占位空气泡，拿到完整回复后逐段渲染（FC 内置运行时不支持真 SSE 流式）
+      const bubble = { role: 'assistant', content: '' }
+      messages.value.push(bubble)
+      await nextTick(); scroll()
+      await chatStream(m, messages.value.slice(0, -1), bubble)
     }
   } catch (e) {
     error.value = e.message || '调用失败，请确认代理函数已部署且 AI_API_BASE 配置正确。'
@@ -94,14 +97,23 @@ async function postChat(m, payload) {
   return res.json()
 }
 
-async function chat(m, text) {
+// 一次性拿到完整回复后，用打字机效果逐段渲染到 bubble（FC 内置运行时不支持真·SSE 流式）
+async function chatStream(m, history, bubble) {
   const data = await postChat(m, {
     provider: m.provider,
     model: m.model,
-    messages: messages.value.map(x => ({ role: x.role, content: x.content })),
+    messages: history.map(x => ({ role: x.role, content: x.content })),
     stream: false,
   })
-  return data?.choices?.[0]?.message?.content
+  const full = data?.choices?.[0]?.message?.content || ''
+  if (!full) { bubble.content = '(空回复)'; return }
+  const step = Math.max(1, Math.round(full.length / 180)) // 约 180 帧播完，长文也不拖沓
+  for (let i = 0; i < full.length; i += step) {
+    if (!messages.value.includes(bubble)) return // 对话已被清除，停止播放
+    bubble.content += full.slice(i, i + step)
+    scroll()
+    await new Promise(r => setTimeout(r, 14))
+  }
 }
 
 async function genImage(m, prompt) {
@@ -164,10 +176,7 @@ function onKey(e) {
           <div v-for="(msg, i) in messages" :key="i" class="bubble" :class="msg.role">
             <div class="who">{{ msg.role === 'user' ? '我' : 'AI' }}</div>
             <div v-if="msg.image" class="text"><img :src="msg.image" alt="生成结果" class="gen-img" /></div>
-            <div v-else class="text">{{ msg.content }}</div>
-          </div>
-          <div v-if="loading" class="bubble assistant">
-            <div class="who">AI</div><div class="text">思考中…</div>
+            <div v-else class="text">{{ msg.content || '思考中…' }}</div>
           </div>
         </div>
 
