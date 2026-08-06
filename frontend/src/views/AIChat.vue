@@ -1,6 +1,8 @@
 <script setup>
-import { ref, nextTick } from 'vue'
-import { AI_API_BASE, AI_MODELS, AI_SITE_KEY } from '../config.js'
+import { ref, computed, nextTick } from 'vue'
+import { AI_API_BASE, AI_MODELS } from '../config.js'
+
+const TOKEN_KEY = 'selfintro_ai_token'
 
 const models = AI_MODELS
 const selected = ref(models[0].id)
@@ -10,7 +12,43 @@ const loading = ref(false)
 const error = ref('')
 const box = ref(null)
 
+// 访问令牌：登录后从 FC 拿到，存 localStorage，7 天内免重复输入
+const token = ref(localStorage.getItem(TOKEN_KEY) || '')
+const locked = computed(() => !token.value)
+
+const pwdInput = ref('')
+const loginErr = ref('')
+const loggingIn = ref(false)
+
 const current = () => models.find(m => m.id === selected.value)
+
+async function unlock() {
+  const pwd = pwdInput.value
+  if (!pwd || loggingIn.value) return
+  loggingIn.value = true
+  loginErr.value = ''
+  try {
+    const res = await fetch(`${AI_API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.token) throw new Error(data.error || '登录失败')
+    token.value = data.token
+    localStorage.setItem(TOKEN_KEY, data.token)
+    pwdInput.value = ''
+  } catch (e) {
+    loginErr.value = e.message || '登录失败，请重试'
+  } finally {
+    loggingIn.value = false
+  }
+}
+
+function lock() {
+  token.value = ''
+  localStorage.removeItem(TOKEN_KEY)
+}
 
 async function send() {
   const text = input.value.trim()
@@ -35,6 +73,7 @@ async function send() {
     }
   } catch (e) {
     error.value = e.message || '调用失败，请确认代理函数已部署且 AI_API_BASE 配置正确。'
+    if (String(e.message).includes('未授权')) lock() // 令牌失效，退回登录
   } finally {
     loading.value = false
     await nextTick(); scroll()
@@ -44,9 +83,10 @@ async function send() {
 async function postChat(m, payload) {
   const res = await fetch(`${AI_API_BASE}/chat`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-site-key': AI_SITE_KEY },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token.value}` },
     body: JSON.stringify(payload),
   })
+  if (res.status === 401) throw new Error('未授权：请先在页面输入访问口令')
   if (!res.ok) {
     const t = await res.text().catch(() => '')
     throw new Error(`调用失败 (${res.status}) ${t.slice(0, 160)}`)
@@ -89,7 +129,22 @@ function onKey(e) {
       <h1 class="section-title">AI 应用</h1>
       <p class="section-sub">你的小帮手随时待命！</p>
 
-      <div class="ai-card card">
+      <!-- 口令闸门：未登录时覆盖在卡片之上 -->
+      <div v-if="locked" class="gate">
+        <div class="gate-card">
+          <h2>🔒 访问受限</h2>
+          <p>本页 AI 功能需输入访问口令</p>
+          <input
+            v-model="pwdInput" type="password" @keyup.enter="unlock"
+            placeholder="请输入访问口令" :disabled="loggingIn" />
+          <button class="btn btn-primary" :disabled="loggingIn || !pwdInput" @click="unlock">
+            {{ loggingIn ? '验证中…' : '进入' }}
+          </button>
+          <div v-if="loginErr" class="gate-err">{{ loginErr }}</div>
+        </div>
+      </div>
+
+      <div class="ai-card card" :class="{ blurred: locked }">
         <div class="ai-head">
           <div class="field" style="margin:0;flex:1">
             <label>选择模型</label>
@@ -98,6 +153,7 @@ function onKey(e) {
             </select>
           </div>
           <button class="btn btn-ghost btn-sm" @click="reset">清除对话</button>
+          <button v-if="!locked" class="btn btn-ghost btn-sm" @click="lock">退出</button>
         </div>
 
         <div class="chat" ref="box">
@@ -130,6 +186,7 @@ function onKey(e) {
 
 <style scoped>
 .ai-card { padding: 18px; max-width: 820px; margin: 0 auto; }
+.ai-card.blurred { filter: blur(6px); pointer-events: none; user-select: none; opacity: .5; }
 .ai-head { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 14px; }
 .chat {
   height: 460px; overflow-y: auto; background: var(--surface-2);
@@ -164,6 +221,24 @@ function onKey(e) {
 .ai-input textarea::placeholder { color: var(--muted); }
 .ai-input .btn { margin-bottom: 2px; }
 .gen-img { max-width: 100%; border-radius: 12px; display: block; margin-top: 2px; }
+
+/* 口令闸门 */
+.gate { position: sticky; top: 0; min-height: 56vh; display: flex; align-items: center; justify-content: center; }
+.gate-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+  padding: 28px 26px; width: min(360px, 90vw); text-align: center;
+  box-shadow: 0 10px 40px rgba(124, 58, 237, .12);
+}
+.gate-card h2 { margin: 0 0 6px; font-size: 1.25rem; }
+.gate-card p { color: var(--muted); margin: 0 0 18px; }
+.gate-card input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: 12px; font-size: 1rem; outline: none; margin-bottom: 12px;
+}
+.gate-card input:focus { border-color: var(--primary); }
+.gate-card .btn { width: 100%; }
+.gate-err { color: #e11d48; font-size: .85rem; margin-top: 10px; }
+
 @media (max-width: 560px) {
   .chat { height: 380px; }
   .ai-head { flex-direction: column; align-items: stretch; }
