@@ -69,10 +69,10 @@ async function send() {
       messages.value.push({ role: 'assistant', image: img })
     } else {
       // 流式打字机：先占位空气泡，拿到完整回复后逐段渲染（FC 内置运行时不支持真 SSE 流式）
-      const bubble = { role: 'assistant', content: '' }
-      messages.value.push(bubble)
+      messages.value.push({ role: 'assistant', content: '' })
       await nextTick(); scroll()
-      await chatStream(m, messages.value.slice(0, -1), bubble)
+      const idx = messages.value.length - 1
+      await chatStream(m, messages.value.slice(0, -1), idx)
     }
   } catch (e) {
     error.value = e.message || '调用失败，请确认代理函数已部署且 AI_API_BASE 配置正确。'
@@ -97,8 +97,9 @@ async function postChat(m, payload) {
   return res.json()
 }
 
-// 一次性拿到完整回复后，用打字机效果逐段渲染到 bubble（FC 内置运行时不支持真·SSE 流式）
-async function chatStream(m, history, bubble) {
+// 一次性拿到完整回复后，用打字机效果逐段渲染（FC 内置运行时不支持真·SSE 流式）
+// 关键：必须用 messages.value[idx] 这个响应式代理更新，直接改外部对象引用不会触发视图刷新
+async function chatStream(m, history, idx) {
   const data = await postChat(m, {
     provider: m.provider,
     model: m.model,
@@ -106,11 +107,11 @@ async function chatStream(m, history, bubble) {
     stream: false,
   })
   const full = data?.choices?.[0]?.message?.content || ''
-  if (!full) { bubble.content = '(空回复)'; return }
+  if (!full) { messages.value[idx].content = '(空回复)'; return }
   const step = Math.max(1, Math.round(full.length / 180)) // 约 180 帧播完，长文也不拖沓
   for (let i = 0; i < full.length; i += step) {
-    if (!messages.value.includes(bubble)) return // 对话已被清除，停止播放
-    bubble.content += full.slice(i, i + step)
+    if (idx >= messages.value.length) return // 对话已被清除，停止播放
+    messages.value[idx].content += full.slice(i, i + step)
     scroll()
     await new Promise(r => setTimeout(r, 14))
   }
