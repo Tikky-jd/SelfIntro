@@ -345,6 +345,10 @@ img { max-width: 100%; display: block; }
 .markdown blockquote { border-left: 4px solid var(--primary); margin: 1em 0; padding-left: 16px; color: var(--text-soft); }
 .markdown ul, .markdown ol { padding-left: 22px; }
 
+/* 浏览量统计（busuanzi） */
+.view-stat { font-size: .82rem; color: var(--muted); }
+.view-stat #busuanzi_value_page_pv { color: var(--primary-dark); font-weight: 700; }
+
 /* ---------- Forms ---------- */
 .field { margin-bottom: 16px; }
 .field label { display: block; font-weight: 700; margin-bottom: 6px; font-size: .9rem; font-family: var(--font-display); }

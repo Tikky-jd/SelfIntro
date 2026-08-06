@@ -139,6 +139,10 @@ function scrollDown() {
         <router-link to="/works" class="btn btn-ghost">查看全部 →</router-link>
       </div>
     </section>
+
+    <div class="home-foot">
+      <span id="busuanzi_container_page_pv" class="view-stat">👁 本页浏览 <span id="busuanzi_value_page_pv">—</span> 次</span>
+    </div>
   </div>
 </template>
 
@@ -435,4 +439,6 @@ function scrollDown() {
   .hero-actions { flex-direction: column; align-items: center; }
   .hero-actions .btn { width: 100%; max-width: 280px; }
 }
+
+.home-foot { margin-top: 40px; text-align: center; }
 </style>

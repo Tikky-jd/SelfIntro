@@ -1,6 +1,24 @@
 <script setup>
 import NavBar from './components/NavBar.vue'
 import Footer from './components/Footer.vue'
+import { useRoute } from 'vue-router'
+import { onMounted, watch, nextTick } from 'vue'
+
+// 浏览量统计（不蒜子 busuanzi，纯前端、无需后端）。
+// 本站用 hash 路由（SPA），busuanzi 只在脚本加载时按当前 URL 计数一次；
+// 因此在每次路由切换后重新注入脚本，使其按新路由 URL 重新计数。
+const route = useRoute()
+function loadBusuanzi() {
+  const old = document.getElementById('busuanzi-script')
+  if (old && old.parentNode) old.parentNode.removeChild(old)
+  const s = document.createElement('script')
+  s.id = 'busuanzi-script'
+  s.async = true
+  s.src = 'https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js'
+  document.body.appendChild(s)
+}
+onMounted(loadBusuanzi)
+watch(() => route.fullPath, () => nextTick(loadBusuanzi))
 </script>
 
 <template>

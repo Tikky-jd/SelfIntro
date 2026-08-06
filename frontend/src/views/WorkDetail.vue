@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getWorkContent } from '../api/content'
+import MarkdownView from '../components/MarkdownView.vue'
 
 const route = useRoute()
 const work = ref(null)
@@ -29,7 +30,7 @@ onMounted(async () => {
       <p style="color:var(--text-soft)">{{ work.description }}</p>
       <img v-if="work.mediaType === 'IMAGE'" :src="work.url" style="width:100%;border-radius:14px;margin-top:16px" />
       <video v-else :src="work.url" :poster="work.coverUrl || undefined" controls style="width:100%;border-radius:14px;margin-top:16px"></video>
-      <div v-if="work.content" class="work-content" style="margin-top:22px; line-height:1.9; color:var(--text); white-space:pre-line;">{{ work.content }}</div>
+      <MarkdownView v-if="work.content" :source="work.content" class="work-content" style="margin-top:22px; display:block;" />
     </div>
 
     <div v-else class="empty">作品不存在或已被删除。</div>

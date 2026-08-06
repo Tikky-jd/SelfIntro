@@ -51,6 +51,9 @@ const filtered = computed(() =>
   <div class="container section works-page">
     <h1 class="section-title">作品集</h1>
     <p class="section-sub">图片与视频作品展示</p>
+    <div class="works-head-stat">
+      <span id="busuanzi_container_page_pv" class="view-stat">👁 本页浏览 <span id="busuanzi_value_page_pv">—</span> 次</span>
+    </div>
 
     <!-- 按类型筛选（保留原位置） -->
     <div class="row" style="margin-bottom:20px;gap:8px">
@@ -109,6 +112,7 @@ const filtered = computed(() =>
 .works-page {
   padding-right: 232px;
 }
+.works-head-stat { margin-bottom: 16px; }
 .works-side {
   position: fixed;
   top: 92px;

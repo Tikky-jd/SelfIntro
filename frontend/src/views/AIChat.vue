@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, nextTick } from 'vue'
 import { AI_API_BASE, AI_MODELS } from '../config.js'
+import MarkdownView from '../components/MarkdownView.vue'
 
 const TOKEN_KEY = 'selfintro_ai_token'
 
@@ -68,8 +69,8 @@ async function send() {
       const img = await genImage(m, text)
       messages.value.push({ role: 'assistant', image: img })
     } else {
-      // 流式打字机：先占位空气泡，拿到完整回复后逐段渲染（FC 内置运行时不支持真 SSE 流式）
-      messages.value.push({ role: 'assistant', content: '' })
+      // 流式打字机：先占位空气泡（streaming 标记播放中显示纯文本），拿到完整回复后逐段渲染（FC 内置运行时不支持真 SSE 流式）
+      messages.value.push({ role: 'assistant', content: '', streaming: true })
       await nextTick(); scroll()
       const idx = messages.value.length - 1
       await chatStream(m, messages.value.slice(0, -1), idx)
@@ -107,7 +108,7 @@ async function chatStream(m, history, idx) {
     stream: false,
   })
   const full = data?.choices?.[0]?.message?.content || ''
-  if (!full) { messages.value[idx].content = '(空回复)'; return }
+  if (!full) { messages.value[idx].content = '(空回复)'; messages.value[idx].streaming = false; return }
   const step = Math.max(1, Math.round(full.length / 180)) // 约 180 帧播完，长文也不拖沓
   for (let i = 0; i < full.length; i += step) {
     if (idx >= messages.value.length) return // 对话已被清除，停止播放
@@ -115,6 +116,7 @@ async function chatStream(m, history, idx) {
     scroll()
     await new Promise(r => setTimeout(r, 14))
   }
+  messages.value[idx].streaming = false // 播放完成，切到 Markdown 渲染
 }
 
 async function genImage(m, prompt) {
@@ -133,6 +135,24 @@ function scroll() {
 function reset() { messages.value = []; error.value = '' }
 function onKey(e) {
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send() }
+}
+
+// 复制消息文本（优先 Clipboard API，失败回退 execCommand）
+async function copyMsg(msg) {
+  const text = msg.content || ''
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch {}
+    document.body.removeChild(ta)
+  }
 }
 </script>
 
@@ -175,9 +195,13 @@ function onKey(e) {
             <template v-else>和 {{ current().label }} 聊聊吧～（Ctrl/⌘ + Enter 发送）</template>
           </div>
           <div v-for="(msg, i) in messages" :key="i" class="bubble" :class="msg.role">
-            <div class="who">{{ msg.role === 'user' ? '我' : 'AI' }}</div>
+            <div class="who">
+              <span>{{ msg.role === 'user' ? '我' : 'AI' }}</span>
+              <button class="copy-btn" v-if="msg.content" @click="copyMsg(msg)" title="复制内容">复制</button>
+            </div>
             <div v-if="msg.image" class="text"><img :src="msg.image" alt="生成结果" class="gen-img" /></div>
-            <div v-else class="text">{{ msg.content || '思考中…' }}</div>
+            <div v-else-if="msg.streaming" class="text">{{ msg.content || '思考中…' }}</div>
+            <div v-else class="text md"><MarkdownView :source="msg.content || ''" /></div>
           </div>
         </div>
 
@@ -204,7 +228,10 @@ function onKey(e) {
 }
 .chat-empty { color: var(--muted); text-align: center; padding: 60px 0; }
 .bubble { max-width: 82%; margin-bottom: 14px; padding: 12px 14px; border-radius: 16px; }
-.bubble .who { font-size: .72rem; font-weight: 700; opacity: .7; margin-bottom: 4px; }
+.bubble .who { display: flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 700; opacity: .7; margin-bottom: 4px; }
+.copy-btn { margin-left: auto; font-size: .68rem; font-weight: 600; color: var(--muted); background: none; border: none; cursor: pointer; opacity: .6; padding: 2px 6px; border-radius: 6px; transition: color .15s, background .15s, opacity .15s; }
+.copy-btn:hover { color: var(--primary); opacity: 1; background: var(--surface-2); }
+.bubble.assistant .text.md { white-space: normal; }
 .bubble.user { margin-left: auto; background: var(--grad-warm); color: #fff; }
 .bubble.assistant { background: #fff; border: 1px solid var(--border); }
 .bubble.assistant .text { white-space: pre-wrap; }
