@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tikky-jd.github.io/SelfIntro/sitemap.xml
