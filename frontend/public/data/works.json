@@ -52,5 +52,16 @@
     "coverUrl": "uploads/ZPFM_03_20260804.jpg",
     "tags": ["动态设计", "三维动画"],
     "createdAt": "2026-08-04T16:42:00.000000"
+  },
+  {
+    "id": 6,
+    "title": "AE渐变动态背景",
+    "description": "模糊与发光的呼吸感实验",
+    "content": "以模糊与发光两个效果为主，两层模糊一层定向（方向投射）一层高斯（边缘扩散），发光效果中的发光半径加了wiggle抖动，使得图形有运动感。",
+    "mediaType": "VIDEO",
+    "url": "uploads/DT_04_20260807.mp4",
+    "coverUrl": "uploads/ZPFM_04_20260807.png",
+    "tags": ["动态设计", "视觉效果"],
+    "createdAt": "2026-08-07T11:08:00.000000"
   }
 ]
