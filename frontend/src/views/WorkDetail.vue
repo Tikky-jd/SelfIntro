@@ -21,7 +21,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="container section" style="max-width:860px">
+  <div class="container section" style="max-width:860px; position:relative; padding-bottom:64px">
     <router-link to="/works" class="btn btn-ghost btn-sm">← 返回作品</router-link>
 
     <div v-if="loading" class="spinner"></div>
