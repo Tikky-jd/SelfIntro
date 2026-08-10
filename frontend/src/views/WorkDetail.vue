@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getWorkContent } from '../api/content'
 import MarkdownView from '../components/MarkdownView.vue'
+import BackToTop from '../components/BackToTop.vue'
 
 const route = useRoute()
 const work = ref(null)
@@ -34,5 +35,7 @@ onMounted(async () => {
     </div>
 
     <div v-else class="empty">作品不存在或已被删除。</div>
+
+    <BackToTop />
   </div>
 </template>
