@@ -1,6 +1,7 @@
 <script setup>
 import NavBar from './components/NavBar.vue'
 import Footer from './components/Footer.vue'
+import BackToTop from './components/BackToTop.vue'
 import { useRoute } from 'vue-router'
 import { onMounted, watch, nextTick } from 'vue'
 
@@ -32,6 +33,7 @@ watch(() => route.fullPath, () => nextTick(loadBusuanzi))
           </div>
         </transition>
       </router-view>
+      <BackToTop />
     </main>
     <Footer />
   </div>

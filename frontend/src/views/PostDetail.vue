@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getPostContent } from '../api/content'
 import MarkdownView from '../components/MarkdownView.vue'
-import BackToTop from '../components/BackToTop.vue'
 import { formatDate } from '../utils/format'
 
 const route = useRoute()
@@ -43,7 +42,5 @@ onMounted(async () => {
     </article>
 
     <div v-else class="empty">笔记不存在或已被删除。</div>
-
-    <BackToTop />
   </div>
 </template>
