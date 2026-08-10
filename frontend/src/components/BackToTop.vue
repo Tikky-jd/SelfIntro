@@ -1,12 +1,16 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-// 滚动超过该像素值后显示「返回顶部」按钮
-const THRESHOLD = 400
+// 滚动超过该像素值后显示「返回顶部」按钮（出现后常驻右下角）
+const THRESHOLD = 200
 const visible = ref(false)
 
+function getScrollY() {
+  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0
+}
+
 function onScroll() {
-  visible.value = window.scrollY > THRESHOLD
+  visible.value = getScrollY() > THRESHOLD
 }
 
 function scrollToTop() {
@@ -47,9 +51,9 @@ onUnmounted(() => {
 
 <style scoped>
 .back-to-top {
-  position: absolute;
+  position: fixed;
   right: 22px;
-  bottom: 22px;
+  bottom: 26px;
   z-index: 60;
   width: 46px;
   height: 46px;
