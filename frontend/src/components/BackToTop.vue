@@ -10,6 +10,8 @@ function onScroll() {
 }
 
 function scrollToTop() {
+  // 点击时立即触发淡出，不等待滚动事件
+  visible.value = false
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
